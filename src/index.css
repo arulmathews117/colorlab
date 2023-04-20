@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&family=Roboto&display=swap');
+
+.app {
+  text-align: center;
+  font-family: Poppins;
+}
+
+.google-btn {
+  display: flex;
+  justify-content: center;  
+}
