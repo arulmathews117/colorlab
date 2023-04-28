@@ -71,6 +71,7 @@
   color: #212121;
   background-color: white;
   border: 1px solid #212121;
+  border-radius: 10px;
 }
 
 .grid-child:hover {

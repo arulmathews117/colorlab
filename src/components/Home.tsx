@@ -91,13 +91,15 @@ export default function Home({ database }) {
       )}
 
       <div className="grid-main">
-        {docsData.map((doc) => {
-          return (
-            <div className="grid-child">
-              <h3>{doc.title}</h3>
-            </div>
-          );
-        })}
+        {docsData
+          .filter((doc) => doc.author === userEmail)
+          .map((doc) => {
+            return (
+              <div className="grid-child">
+                <h3>{doc.title}</h3>
+              </div>
+            );
+          })}
       </div>
     </div>
   );
