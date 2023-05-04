@@ -1,21 +1,16 @@
-import { useState } from 'react'
-import './App.css'
+import { useState } from "react";
+import Home from "./components/Home";
 import { Routes, Route } from "react-router-dom";
-import Login from "./components/Login";
-import Home from './components/Home';
 import { app, database } from "./firebaseConfig";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <div>
       <Routes>
-        <Route path='/' element={ <Login /> } />
-        <Route path='/home' element={ <Home database={database} /> } />
+        <Route path="/home/:id" element={<Home />} />
       </Routes>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
