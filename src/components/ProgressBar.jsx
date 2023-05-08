@@ -1,9 +1,10 @@
 import React from "react";
+import { Progress } from "antd";
 
-export default function ProgressBar() {
+export default function ProgressBar({ completed }) {
   return (
-    <div>
-      <h1></h1>
+    <div className="progress-bar">
+      <Progress percent={completed} />
     </div>
   );
 }
