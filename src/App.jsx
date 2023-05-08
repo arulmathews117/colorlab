@@ -7,7 +7,7 @@ import { app, database } from "./firebaseConfig";
 function App() {
 
   return (
-    <div>
+    <div className="app">
     <Routes>
       <Route path='/' element={ <Login /> } />
       <Route path='/home' element={ <Home /> } />

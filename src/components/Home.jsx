@@ -49,7 +49,7 @@ export default function Home() {
 
         <FcOpenedFolder size={50} className="icon" onClick={showModal} />
 
-        <FiLogOut size={50} className="icon" onClick={logout} />
+        <FiLogOut size={50} className="icon" color="#ffc107" onClick={logout} />
       </div>
 
       <Modal

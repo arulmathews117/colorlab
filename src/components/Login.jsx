@@ -33,6 +33,7 @@ export default function Login() {
 
   return (
     <div className="google-btn">
+        <h1>Sign In with Google...</h1>
       <GoogleButton onClick={signIn} />
     </div>
   );
