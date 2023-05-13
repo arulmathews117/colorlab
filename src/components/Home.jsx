@@ -1,72 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { FcOpenedFolder } from "react-icons/fc";
 import { FiFilePlus, FiLogOut } from "react-icons/fi";
-import { Modal, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import ProgressBar from "./ProgressBar";
-import { auth } from "../firebaseConfig";
+import { auth, storage } from "../firebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "firebase/storage";
-import { collection, addDoc, onSnapshot } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL, listAll } from "firebase/storage";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function Home({ database }) {
+export default function Home() {
   let navigate = useNavigate();
   let userEmail = localStorage.getItem("userEmail");
-  const storage = getStorage();
   const [progress, setProgress] = useState(null);
-  const collectionRef = collection(database, "driveData");
-  const [folderName, setFolderName] = useState("");
-  const [folders, setFolders] = useState([]);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
+  const [imageList, setImageList] = useState([]);
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const folderUpload = () => {
-    addDoc(collectionRef, {
-      userEmail: userEmail,
-      folderName: folderName,
-      fileLink: [
-        {
-          downloadURL: "",
-          fileName: "",
-        },
-      ],
-    })
-      .then(() => {
-        setIsModalVisible(false);
-        toast.success("Folder Added", {
-          autoClose: 1500,
-        });
-        // alert('Folder Added')
-        setFolderName("");
-      })
-      .catch((err) => {
-        toast.error(err.message);
-      });
-  };
-
-  const getFile = (event) => {
-    const fileRef = ref(storage, event.target.files[0].name);
-    const uploadTask = uploadBytesResumable(fileRef, event.target.files[0]);
+  const uploadImage = (event) => {
+    const imageRef = ref(storage, `${userEmail}/${event.target.files[0].name}`);
+    const uploadTask = uploadBytesResumable(imageRef, event.target.files[0]);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setProgress(Math.round(progress));
+        setProgress(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
       },
       (error) => {
         toast.error(error.message, {
@@ -74,44 +29,23 @@ export default function Home({ database }) {
         });
       },
       () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setProgress(null);
-          addDoc(collectionRef, {
-            userEmail: userEmail,
-            fileName: event.target.files[0].name,
-            downloadURL: downloadURL,
-          })
-            .then(() => {
-              toast.success("File Added", {
-                autoClose: 1500,
-              });
-            })
-            .catch((err) => {
-              toast.error(err.message, {
-                autoClose: 1500,
-              });
-            });
+        setProgress(null)
+        toast.success("File Added", {
+          autoClose: 1500,
         });
       }
     );
   };
 
   const readData = () => {
-    onSnapshot(collectionRef, (data) => {
-      setFolders(
-        data.docs.map((doc) => {
-          return { ...doc.data(), id: doc.id };
+    const imageListRef = ref(storage, `${userEmail}/`);
+    listAll(imageListRef).then((response) => {
+      response.items.forEach((item) => {
+        getDownloadURL(item).then((url) => {
+          setImageList((prev) => [...prev, url]);
         })
-      );
-    });
-  };
-
-  const openFolder = (id) => {
-    navigate(`/folder/${id}`);
-  };
-
-  const openFile = (downloadURL) => {
-    window.open(downloadURL, "_blank");
+      })
+    })
   };
 
   const logOut = () => {
@@ -132,10 +66,6 @@ export default function Home({ database }) {
       });
   };
 
-  function limit(string = "", limit = 0) {
-    return string.substring(0, limit);
-  }
-
   const authState = () => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -150,18 +80,18 @@ export default function Home({ database }) {
     readData();
     authState();
   }, []);
+
   return (
     <div>
       <ToastContainer />
       <div className="title-container">
-        <h1>FireDrive</h1>
+        <h1>ColorLab</h1>
       </div>
       <div className="icon-container">
         <div className="upload-btn-wrapper">
           <FiFilePlus color="#757575" className="icon" size={50} />
-          <input type="file" name="myfile" onChange={getFile} />
+          <input type="file" name="myfile" onChange={uploadImage} />
         </div>
-        <FcOpenedFolder size={50} className="icon" onClick={showModal} />
 
         <FiLogOut color="#f44336" size={50} className="icon" onClick={logOut} />
       </div>
@@ -169,39 +99,7 @@ export default function Home({ database }) {
         {progress ? <ProgressBar completed={progress} /> : <></>}
       </div>
       <div className="grid-parent">
-        {folders.filter((folder) => folder.userEmail == userEmail).map((filteredFolder) => (
-          
-              <div
-                className="grid-child"
-                onClick={() =>
-                  filteredFolder.folderName
-                    ? openFolder(filteredFolder.id)
-                    : openFile(filteredFolder.downloadURL)
-                }
-                key="{filteredFolder}"
-              >
-                <h4>
-                  {filteredFolder.folderName
-                    ? filteredFolder.folderName
-                    : `${limit(filteredFolder.fileName, 20)}...`}
-                </h4>
-              </div>
-           
-        ))}
       </div>
-      <Modal
-        title="Folder Upload"
-        open={isModalVisible}
-        onOk={folderUpload}
-        onCancel={handleCancel}
-        centered
-      >
-        <Input
-          placeholder="Enter the Folder Name.."
-          onChange={(event) => setFolderName(event.target.value)}
-          value={folderName}
-        />
-      </Modal>
     </div>
   );
 }

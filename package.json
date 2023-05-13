@@ -20,7 +20,8 @@
     "react-konva": "^18.2.7",
     "react-router-dom": "^6.10.0",
     "react-toastify": "^9.1.2",
-    "styled-components": "^5.3.10"
+    "styled-components": "^5.3.10",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",
