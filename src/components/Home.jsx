@@ -1,10 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { FiFilePlus, FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { Modal } from "antd";
 import ProgressBar from "./ProgressBar";
 import { auth, storage } from "../firebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
-import { ref, uploadBytesResumable, getDownloadURL, listAll } from "firebase/storage";
+import FilerobotImageEditor, {
+  TABS,
+  TOOLS,
+} from "react-filerobot-image-editor";
+
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  listAll,
+  getBytes
+} from "firebase/storage";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -15,13 +27,24 @@ export default function Home() {
   const [progress, setProgress] = useState(null);
   const [imageList, setImageList] = useState([]);
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [imageInEditor, setImageInEditor] = useState(null);
+  const [] = useState(null);
+  const [] = useState(null);
+
+  const justSave = () => {};
+  const justClose = () => {setIsEditorOpen(false);setImageInEditor(null)};
+  const closeAndSave = () => {justSave();justClose();};
+
   const uploadImage = (event) => {
     const imageRef = ref(storage, `${userEmail}/${event.target.files[0].name}`);
     const uploadTask = uploadBytesResumable(imageRef, event.target.files[0]);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
-        setProgress(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+        setProgress(
+          Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+        );
       },
       (error) => {
         toast.error(error.message, {
@@ -29,7 +52,7 @@ export default function Home() {
         });
       },
       () => {
-        setProgress(null)
+        setProgress(null);
         toast.success("File Added", {
           autoClose: 1500,
         });
@@ -38,14 +61,20 @@ export default function Home() {
   };
 
   const readData = () => {
+    setImageList([]);
     const imageListRef = ref(storage, `${userEmail}/`);
     listAll(imageListRef).then((response) => {
       response.items.forEach((item) => {
+        const name = item._location.path_.split("/")[1];
         getDownloadURL(item).then((url) => {
-          setImageList((prev) => [...prev, url]);
-        })
-      })
-    })
+          console.log(url);
+          setImageList((prev) => [
+            ...prev,
+            { obj: item, name: name, url: url },
+          ]);
+        });
+      });
+    });
   };
 
   const logOut = () => {
@@ -99,7 +128,37 @@ export default function Home() {
         {progress ? <ProgressBar completed={progress} /> : <></>}
       </div>
       <div className="grid-parent">
+        {imageList.map((item) => {
+          return (
+            <div
+              key={item.url}
+              className="grid-child"
+              onClick={() => {
+                setImageInEditor(item);
+                setIsEditorOpen(true);
+              }}
+            >
+              <img src={item.url} alt="" height={100} />
+              <h4 className="file-title">{item.name}</h4>
+            </div>
+          );
+        })}
       </div>
+      <Modal
+        title="Basic Modal"
+        open={isEditorOpen}
+        onOk={closeAndSave}
+        onCancel={justClose}
+      >
+        {(isEditorOpen && <FilerobotImageEditor
+        source={imageInEditor.url}
+        onSave={justSave}
+        onClose={justClose}
+        tabsIds={[TABS.ADJUST, TABS.ANNOTATE, TABS.WATERMARK, TABS.FILTERS, TABS.RESIZE, TABS.FINETUNE]} // or {['Adjust', 'Annotate', 'Watermark']}
+          defaultTabId={TABS.ANNOTATE} // or 'Annotate'
+          defaultToolId={TOOLS.TEXT}
+        />)}
+      </Modal>
     </div>
   );
 }
