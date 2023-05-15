@@ -15,7 +15,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
   listAll,
-  getBytes
+  getBytes,
 } from "firebase/storage";
 
 import { ToastContainer, toast } from "react-toastify";
@@ -33,8 +33,14 @@ export default function Home() {
   const [] = useState(null);
 
   const justSave = () => {};
-  const justClose = () => {setIsEditorOpen(false);setImageInEditor(null)};
-  const closeAndSave = () => {justSave();justClose();};
+  const justClose = () => {
+    setIsEditorOpen(false);
+    setImageInEditor(null);
+  };
+  const closeAndSave = () => {
+    justSave();
+    justClose();
+  };
 
   const uploadImage = (event) => {
     const imageRef = ref(storage, `${userEmail}/${event.target.files[0].name}`);
@@ -149,15 +155,26 @@ export default function Home() {
         open={isEditorOpen}
         onOk={closeAndSave}
         onCancel={justClose}
+        width={1200}
+        height={1000}
       >
-        {(isEditorOpen && <FilerobotImageEditor
-        source={imageInEditor.url}
-        onSave={justSave}
-        onClose={justClose}
-        tabsIds={[TABS.ADJUST, TABS.ANNOTATE, TABS.WATERMARK, TABS.FILTERS, TABS.RESIZE, TABS.FINETUNE]} // or {['Adjust', 'Annotate', 'Watermark']}
-          defaultTabId={TABS.ANNOTATE} // or 'Annotate'
-          defaultToolId={TOOLS.TEXT}
-        />)}
+        {isEditorOpen && (
+          <FilerobotImageEditor
+            source={imageInEditor.url}
+            onSave={justSave}
+            onClose={justClose}
+            tabsIds={[
+              TABS.ADJUST,
+              TABS.ANNOTATE,
+              TABS.WATERMARK,
+              TABS.FILTERS,
+              TABS.RESIZE,
+              TABS.FINETUNE,
+            ]}
+            defaultTabId={TABS.ANNOTATE}
+            defaultToolId={TOOLS.TEXT}
+          />
+        )}
       </Modal>
     </div>
   );
